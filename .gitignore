@@ -1,0 +1,34 @@
+# Build directories
+backend/build/
+backend/out/
+backend/cmake-build-*/
+
+# VS Code
+.vscode/
+.vs/
+
+# vcpkg
+/vcpkg/
+/installed/
+
+# Compiled files
+*.exe
+*.dll
+*.lib
+*.so
+*.dylib
+*.o
+*.obj
+
+# Logs
+logs/
+*.log
+
+# Environment files
+.env
+.env.local
+
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env

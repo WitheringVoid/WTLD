@@ -1,0 +1,11 @@
+{
+  "name": "wtld-backend",
+  "version": "1.0.0",
+  "dependencies": [
+    "drogon",
+    "libpqxx",
+    "jwt-cpp",
+    "openssl",
+    "nlohmann-json"
+  ]
+}

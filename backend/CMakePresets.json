@@ -1,0 +1,43 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "windows-default",
+            "displayName": "Windows Config",
+            "description": "Конфигурация для Windows с vcpkg",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": {
+                    "type": "FILEPATH",
+                    "value": "D:/VS_Code_projects/sources/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                },
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "windows-msvc",
+            "displayName": "Windows MSVC Config",
+            "description": "Конфигурация для Windows с MSVC",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": {
+                    "type": "FILEPATH",
+                    "value": "D:/VS_Code_projects/sources/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                }
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-default",
+            "configurePreset": "windows-default"
+        },
+        {
+            "name": "windows-msvc",
+            "configurePreset": "windows-msvc"
+        }
+    ]
+}
