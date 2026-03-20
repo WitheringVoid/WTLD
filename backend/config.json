@@ -1,0 +1,26 @@
+{
+    "app": {
+        "name": "WTLD Backend",
+        "log_path": "./logs",
+        "log_level": 1,
+        "number_of_threads": 4,
+        "use_ssl": false,
+        "document_root": "../frontend/build"
+    },
+    "listeners": [
+        {
+            "address": "0.0.0.0",
+            "port": 8080
+        }
+    ],
+    "clients": {
+        "postgresql": {
+            "dbname": "wtld_db",
+            "user": "wtld_user",
+            "password": "wtld_password",
+            "host": "localhost",
+            "port": 5432,
+            "number_of_connections": 5
+        }
+    }
+}

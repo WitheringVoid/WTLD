@@ -18,6 +18,7 @@ find_package(Pgxx REQUIRED)
 find_package(jwt-cpp REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(Threads REQUIRED)
 
 # Добавление исходников
 include_directories(include)
@@ -35,6 +36,14 @@ target_link_libraries(${PROJECT_NAME}
     OpenSSL::SSL
     OpenSSL::Crypto
     nlohmann_json::nlohmann_json
+    Threads::Threads
+)
+
+# Установка флагов компиляции
+target_compile_options(${PROJECT_NAME} PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
 )
 
 # Копирование .dll файлов в папку сборки (для Windows)
