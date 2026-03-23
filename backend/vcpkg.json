@@ -6,6 +6,8 @@
     "libpqxx",
     "jwt-cpp",
     "openssl",
-    "nlohmann-json"
+    "nlohmann-json",
+    "bcrypt",
+    "oatpp"
   ]
 }
