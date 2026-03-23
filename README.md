@@ -281,7 +281,3 @@ WTLD/
 ## 📄 Лицензия
 
 MIT License - см. файл [LICENSE](LICENSE)
-
-## 📞 Контакты
-
-WTLD Team - wtld@example.com
