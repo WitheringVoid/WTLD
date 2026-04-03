@@ -87,21 +87,19 @@ export default function LogDetail() {
       <div className="flex space-x-4 border-b border-dark-700">
         <button
           onClick={() => setActiveTab('entries')}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === 'entries'
+          className={`px-4 py-2 font-medium transition-colors ${activeTab === 'entries'
               ? 'text-primary-400 border-b-2 border-primary-400'
               : 'text-gray-400 hover:text-white'
-          }`}
+            }`}
         >
           Записи ({log.entries?.length || 0})
         </button>
         <button
           onClick={() => setActiveTab('analytics')}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === 'analytics'
+          className={`px-4 py-2 font-medium transition-colors ${activeTab === 'analytics'
               ? 'text-primary-400 border-b-2 border-primary-400'
               : 'text-gray-400 hover:text-white'
-          }`}
+            }`}
         >
           Аналитика ({analytics.length})
         </button>
@@ -125,7 +123,7 @@ export default function LogDetail() {
                   )}
                 </div>
                 <p className="text-gray-300 mt-2 ml-24">{entry.message}</p>
-                {Object.keys(entry.metadata).length > 0 && (
+                {entry.metadata && Object.keys(entry.metadata).length > 0 && (
                   <pre className="mt-2 ml-24 text-xs text-gray-500 bg-dark-900 p-2 rounded">
                     {JSON.stringify(entry.metadata, null, 2)}
                   </pre>
@@ -179,17 +177,16 @@ function AnalyticsCard({ result }: { result: AnalysisResult }) {
           <div className="flex items-center space-x-3">
             <h3 className="text-lg font-semibold text-white">{result.title}</h3>
             <span
-              className={`px-2 py-1 rounded text-xs font-medium ${
-                badgeColors[result.severity] || badgeColors.low
-              }`}
+              className={`px-2 py-1 rounded text-xs font-medium ${badgeColors[result.severity] || badgeColors.low
+                }`}
             >
               {result.severity === 'critical'
                 ? 'Критический'
                 : result.severity === 'high'
-                ? 'Высокий'
-                : result.severity === 'medium'
-                ? 'Средний'
-                : 'Низкий'}
+                  ? 'Высокий'
+                  : result.severity === 'medium'
+                    ? 'Средний'
+                    : 'Низкий'}
             </span>
             {result.is_anomaly && (
               <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/10 text-purple-400">

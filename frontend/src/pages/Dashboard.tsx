@@ -210,11 +210,6 @@ function SeverityBar({
   count: number;
   color: string;
 }) {
-  const maxCount = Math.max(
-    count,
-    1 // Для предотвращения деления на 0
-  );
-
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
@@ -224,7 +219,7 @@ function SeverityBar({
       <div className="h-2 bg-dark-900 rounded-full overflow-hidden">
         <div
           className={`h-full ${color} transition-all duration-500`}
-          style={{ width: `${Math.min((count / Math.max(count, 1)) * 100, 100)}%` }}
+          style={{ width: `${count}%` }}
         />
       </div>
     </div>

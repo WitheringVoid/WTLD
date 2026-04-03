@@ -21,7 +21,7 @@ export default function Layout() {
   useEffect(() => {
     if (events.length > 0) {
       const lastEvent = events[events.length - 1];
-      
+
       switch (lastEvent.type) {
         case 'ANOMALY_DETECTED':
           toast.error(`🚨 ${lastEvent.title}: ${lastEvent.message}`);
@@ -30,10 +30,10 @@ export default function Layout() {
           toast.success(`✅ ${lastEvent.title}: ${lastEvent.message}`);
           break;
         case 'SYSTEM_NOTIFICATION':
-          toast.info(`ℹ️ ${lastEvent.title}`);
+          toast(`ℹ️ ${lastEvent.title}`);
           break;
       }
-      
+
       clearEvents();
     }
   }, [events, clearEvents]);
@@ -51,15 +51,14 @@ export default function Layout() {
           <h1 className="text-2xl font-bold text-primary-400">WTLD</h1>
           <p className="text-sm text-gray-400 mt-1">Анализ логов</p>
         </div>
-        
+
         <nav className="mt-6">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center px-6 py-3 text-gray-300 hover:bg-dark-700 hover:text-white transition-colors ${
-                location.pathname === item.path ? 'bg-dark-700 text-white border-l-4 border-primary-500' : ''
-              }`}
+              className={`flex items-center px-6 py-3 text-gray-300 hover:bg-dark-700 hover:text-white transition-colors ${location.pathname === item.path ? 'bg-dark-700 text-white border-l-4 border-primary-500' : ''
+                }`}
             >
               <span className="mr-3">{item.icon}</span>
               {item.label}
