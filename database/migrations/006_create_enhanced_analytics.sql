@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS analysis_rules (
     rule_name VARCHAR(100) NOT NULL,
     rule_type VARCHAR(50) NOT NULL,  -- regex, keyword, threshold, custom
     pattern TEXT NOT NULL,  -- регулярное выражение или ключевое слово
-    severity VARCHAR(10) DEFAULT 'medium' CHECK (severity_level IN ('low', 'medium', 'high', 'critical')),
+    severity VARCHAR(10) DEFAULT 'medium' CHECK (severity IN ('low', 'medium', 'high', 'critical')),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

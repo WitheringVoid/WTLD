@@ -18,7 +18,7 @@ int main()
     try
     {
         // Загружаем конфигурацию
-        drogon::app().loadConfigFile("../config.json");
+        drogon::app().loadConfigFile("config.json");
 
         // Контроллеры и фильтры регистрируются автоматически через CRTP
         // (HttpController<T, true> и HttpFilter<T>)
