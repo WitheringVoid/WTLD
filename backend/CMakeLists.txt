@@ -24,6 +24,7 @@ list(APPEND CMAKE_LIBRARY_PATH "${VCPKG_LIB_DIR}")
 find_package(Drogon CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(unofficial-sodium CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 
 # Поиск libpqxx вручную (так как с CONFIG могут быть проблемы)
@@ -84,11 +85,12 @@ endif()
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Добавляем include директории
-target_include_directories(${PROJECT_NAME} 
+target_include_directories(${PROJECT_NAME}
     PRIVATE
     ${INCLUDE_DIR}
     ${LIBPQXX_INCLUDE_DIR}
     ${JWT_CPP_INCLUDE_DIR}
+    ${VCPKG_INCLUDE_DIR}
 )
 
 # Линковка библиотек
@@ -99,6 +101,7 @@ target_link_libraries(${PROJECT_NAME}
     OpenSSL::SSL
     OpenSSL::Crypto
     nlohmann_json::nlohmann_json
+    unofficial-sodium::sodium
     Threads::Threads
 )
 
@@ -107,7 +110,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     /W4
     /EHsc
     /utf-8
-    /std:c++17
+    /std:c++20
+    /D_CRT_SECURE_NO_WARNINGS
+    /DNOMINMAX
 )
 
 # Для Windows - копируем DLL

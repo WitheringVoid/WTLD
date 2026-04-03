@@ -7,7 +7,6 @@
     "jwt-cpp",
     "openssl",
     "nlohmann-json",
-    "bcrypt",
-    "oatpp"
+    "libsodium"
   ]
 }

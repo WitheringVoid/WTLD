@@ -20,19 +20,8 @@ int main()
         // Загружаем конфигурацию
         drogon::app().loadConfigFile("../config.json");
 
-        // Регистрация контроллеров
-        drogon::app().registerController<wtld::controllers::AuthController>();
-        drogon::app().registerController<wtld::controllers::LogController>();
-        drogon::app().registerController<wtld::controllers::AnalyticsController>();
-        drogon::app().registerController<wtld::controllers::TwoFAController>();
-        drogon::app().registerController<wtld::controllers::WebSocketController>();
-
-        // Регистрация middleware
-        drogon::app().registerFilter<wtld::middleware::JwtMiddleware>(
-            {"/api/logs/*", "/api/analytics/*", "/api/2fa/*"});
-
-        drogon::app().registerFilter<wtld::middleware::RateLimitMiddleware>(
-            {"/*"});
+        // Контроллеры и фильтры регистрируются автоматически через CRTP
+        // (HttpController<T, true> и HttpFilter<T>)
 
         // Настройка логгирования
         LOG_INFO << "Starting WTLD Backend Server...";

@@ -50,7 +50,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    FRONTEND (React)                         │
-│  Login │ Dashboard │ Log Viewer │ Analytics │ Settings     │
+│  Login │ Dashboard │ Log Viewer │ Analytics │ Settings      │
 └─────────────────────────────────────────────────────────────┘
                             ↕ HTTP/WebSocket
 ┌─────────────────────────────────────────────────────────────┐
@@ -68,8 +68,8 @@
                             ↕ libpqxx
 ┌─────────────────────────────────────────────────────────────┐
 │                  PostgreSQL Database                        │
-│  users │ logs │ analytics │ two_factor_auth │ log_queue    │
-│  analysis_rules │ log_analytics                              │
+│  users │ logs │ analytics │ two_factor_auth │ log_queue     │
+│  analysis_rules │ log_analytics                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -160,41 +160,41 @@ npm run build
 | Метод | Endpoint | Описание |
 |-------|----------|----------|
 | POST | `/api/auth/register` | Регистрация пользователя |
-| POST | `/api/auth/login` | Вход |
-| POST | `/api/auth/logout` | Выход |
-| GET | `/api/auth/profile` | Профиль пользователя |
+| POST | `/api/auth/login`    | Вход |
+| POST | `/api/auth/logout`   | Выход |
+| GET  | `/api/auth/profile`  | Профиль пользователя |
 
 ### Логи
 
 | Метод | Endpoint | Описание |
 |-------|----------|----------|
-| POST | `/api/logs/upload` | Загрузка файла логов |
-| GET | `/api/logs` | Список логов |
-| GET | `/api/logs/{id}` | Лог по ID |
-| DELETE | `/api/logs/{id}` | Удаление лога |
-| GET | `/api/logs/{id}/stats` | Статистика лога |
+| POST  | `/api/logs/upload`  | Загрузка файла логов |
+| GET   | `/api/logs`         | Список логов |
+| GET   | `/api/logs/{id}`    | Лог по ID |
+| DELETE| `/api/logs/{id}`    | Удаление лога |
+| GET   | `/api/logs/{id}/stats` | Статистика лога |
 
 ### Аналитика
 
 | Метод | Endpoint | Описание |
 |-------|----------|----------|
-| GET | `/api/analytics/dashboard` | Дашборд данные |
-| GET | `/api/analytics/{logId}` | Аналитика лога |
-| GET | `/api/analytics/{logId}/anomalies` | Аномалии |
-| GET | `/api/analytics/rules` | Правила анализа |
-| POST | `/api/analytics/rules` | Создать правило |
-| DELETE | `/api/analytics/rules/{id}` | Удалить правило |
+| GET   | `/api/analytics/dashboard` | Дашборд данные |
+| GET   | `/api/analytics/{logId}`   | Аналитика лога |
+| GET   | `/api/analytics/{logId}/anomalies` | Аномалии |
+| GET   | `/api/analytics/rules`     | Правила анализа |
+| POST  | `/api/analytics/rules`     | Создать правило |
+| DELETE| `/api/analytics/rules/{id}`| Удалить правило |
 
 ### 2FA
 
 | Метод | Endpoint | Описание |
 |-------|----------|----------|
-| POST | `/api/2fa/setup` | Настройка 2FA |
+| POST | `/api/2fa/setup`  | Настройка 2FA |
 | POST | `/api/2fa/verify` | Проверка кода |
 | POST | `/api/2fa/enable` | Включить 2FA |
-| POST | `/api/2fa/disable` | Отключить 2FA |
-| GET | `/api/2fa/status` | Статус 2FA |
-| GET | `/api/2fa/backup-codes` | Резервные коды |
+| POST | `/api/2fa/disable`| Отключить 2FA |
+| GET  | `/api/2fa/status` | Статус 2FA |
+| GET  | `/api/2fa/backup-codes` | Резервные коды |
 
 ### WebSocket
 

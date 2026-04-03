@@ -42,11 +42,11 @@ namespace wtld
             // Получение состояния 2FA для пользователя
             bool is2FAEnabled(int userId);
 
+            // Получение секрета пользователя
+            std::optional<std::string> getUserSecret(int userId);
+
         private:
             drogon::orm::DbClientPtr dbClient_;
-
-            // Внутренняя функция для получения секрета пользователя
-            std::optional<std::string> getUserSecret(int userId);
         };
 
     } // namespace services
