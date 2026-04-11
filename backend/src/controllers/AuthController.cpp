@@ -28,7 +28,7 @@ namespace wtld
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k400BadRequest);
-                    resp->setBody("username, email and password are required");
+                    resp->setBody("{\"status\":\"error\",\"message\":\"All fields are required\"}");
                     callback(resp);
                     return;
                 }
@@ -38,15 +38,16 @@ namespace wtld
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k409Conflict);
-                    resp->setBody("User already exists");
+                    resp->setBody("{\"status\":\"error\",\"message\":\"User already exists\"}");
                     callback(resp);
                     return;
                 }
 
                 auto token = authService_->generateToken(*user);
                 nlohmann::json result;
-                result["user"] = user->toJson();
+                result["status"] = "success";
                 result["token"] = token;
+                result["user"] = user->toJson();
 
                 auto resp = drogon::HttpResponse::newHttpResponse();
                 resp->setStatusCode(drogon::k201Created);
@@ -59,7 +60,7 @@ namespace wtld
                 LOG_ERROR << "Register error: " << e.what();
                 auto resp = drogon::HttpResponse::newHttpResponse();
                 resp->setStatusCode(drogon::k500InternalServerError);
-                resp->setBody("Internal server error");
+                resp->setBody("{\"status\":\"error\",\"message\":\"Internal server error\"}");
                 callback(resp);
             }
         }
@@ -78,7 +79,7 @@ namespace wtld
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k400BadRequest);
-                    resp->setBody("username and password are required");
+                    resp->setBody("{\"status\":\"error\",\"message\":\"username and password are required\"}");
                     callback(resp);
                     return;
                 }
@@ -88,15 +89,16 @@ namespace wtld
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k401Unauthorized);
-                    resp->setBody("Invalid credentials");
+                    resp->setBody("{\"status\":\"error\",\"message\":\"Invalid credentials\"}");
                     callback(resp);
                     return;
                 }
 
                 auto token = authService_->generateToken(*user);
                 nlohmann::json result;
-                result["user"] = user->toJson();
+                result["status"] = "success";
                 result["token"] = token;
+                result["user"] = user->toJson();
 
                 auto resp = drogon::HttpResponse::newHttpResponse();
                 resp->setStatusCode(drogon::k200OK);
@@ -109,7 +111,7 @@ namespace wtld
                 LOG_ERROR << "Login error: " << e.what();
                 auto resp = drogon::HttpResponse::newHttpResponse();
                 resp->setStatusCode(drogon::k500InternalServerError);
-                resp->setBody("Internal server error");
+                resp->setBody("{\"status\":\"error\",\"message\":\"Internal server error\"}");
                 callback(resp);
             }
         }
@@ -118,9 +120,14 @@ namespace wtld
             const drogon::HttpRequestPtr &req,
             std::function<void(const drogon::HttpResponsePtr &)> &&callback)
         {
+            nlohmann::json result;
+            result["status"] = "success";
+            result["message"] = "Logged out successfully";
+
             auto resp = drogon::HttpResponse::newHttpResponse();
             resp->setStatusCode(drogon::k200OK);
-            resp->setBody("Logged out successfully");
+            resp->setContentTypeString("application/json");
+            resp->setBody(result.dump());
             callback(resp);
         }
 
@@ -130,18 +137,34 @@ namespace wtld
         {
             try
             {
-                auto userId = req->attributes()->get<int>("userId");
+                int userId = -1;
+                try
+                {
+                    userId = req->attributes()->get<int>("userId");
+                }
+                catch (...)
+                {
+                    auto resp = drogon::HttpResponse::newHttpResponse();
+                    resp->setStatusCode(drogon::k401Unauthorized);
+                    resp->setBody("{\"status\":\"error\",\"message\":\"Unauthorized\"}");
+                    callback(resp);
+                    return;
+                }
+
                 auto user = authService_->getUserById(userId);
                 if (!user)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k404NotFound);
-                    resp->setBody("User not found");
+                    resp->setBody("{\"status\":\"error\",\"message\":\"User not found\"}");
                     callback(resp);
                     return;
                 }
 
-                nlohmann::json result = user->toJson();
+                nlohmann::json result;
+                result["status"] = "success";
+                result["data"] = user->toJson();
+
                 auto resp = drogon::HttpResponse::newHttpResponse();
                 resp->setStatusCode(drogon::k200OK);
                 resp->setContentTypeString("application/json");
@@ -153,7 +176,7 @@ namespace wtld
                 LOG_ERROR << "Get profile error: " << e.what();
                 auto resp = drogon::HttpResponse::newHttpResponse();
                 resp->setStatusCode(drogon::k500InternalServerError);
-                resp->setBody("Internal server error");
+                resp->setBody("{\"status\":\"error\",\"message\":\"Internal server error\"}");
                 callback(resp);
             }
         }

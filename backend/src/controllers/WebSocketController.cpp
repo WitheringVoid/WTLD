@@ -8,7 +8,20 @@ namespace wtld
     namespace controllers
     {
 
-        // Реализация перенесена в заголовочный файл (inline для CRTP Drogon)
+        void WebSocketController::getStatus(
+            const drogon::HttpRequestPtr &req,
+            std::function<void(const drogon::HttpResponsePtr &)> &&callback)
+        {
+            (void)req;
+            nlohmann::json result;
+            result["status"] = "ok";
+            result["connected_clients"] = services::WebSocketService::instance().getClientCount();
+
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setContentTypeString("application/json");
+            resp->setBody(result.dump());
+            callback(resp);
+        }
 
     } // namespace controllers
 } // namespace wtld
