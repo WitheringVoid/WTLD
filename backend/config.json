@@ -7,6 +7,11 @@
         "use_ssl": false,
         "document_root": "../frontend/build"
     },
+    "jwt": {
+        "secret": "wtld-secret-key-change-in-production",
+        "issuer": "wtld-auth",
+        "expiration_hours": 24
+    },
     "listeners": [
         {
             "address": "0.0.0.0",

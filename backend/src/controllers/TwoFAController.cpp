@@ -1,5 +1,5 @@
 #include "../../include/controllers/TwoFAController.h"
-#include "../../include/services/AuthService.h"
+#include "../../include/utils/AuthUtils.h"
 #include "../../include/services/TwoFactorAuthService.h"
 #include <drogon/HttpResponse.h>
 #include <nlohmann/json.hpp>
@@ -21,7 +21,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -89,7 +89,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -162,7 +162,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -205,7 +205,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -248,7 +248,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -286,7 +286,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -347,37 +347,6 @@ namespace wtld
                 resp->setBody("Internal server error");
                 callback(resp);
             }
-        }
-
-        int TwoFAController::getUserIdFromRequest(const drogon::HttpRequestPtr &req)
-        {
-            try
-            {
-                auto userId = req->attributes()->get<int>("userId");
-                return userId;
-            }
-            catch (...)
-            {
-                // Не найден — пробуем извлечь из токена
-            }
-
-            auto authHeader = req->getHeader("Authorization");
-            if (authHeader.empty() || authHeader.substr(0, 7) != "Bearer ")
-            {
-                return -1;
-            }
-
-            auto token = authHeader.substr(7);
-            auto authService = std::make_shared<services::AuthService>(dbClient_);
-            auto user = authService->validateToken(token);
-
-            if (user)
-            {
-                req->attributes()->insert("userId", user->id);
-                return user->id;
-            }
-
-            return -1;
         }
 
     } // namespace controllers

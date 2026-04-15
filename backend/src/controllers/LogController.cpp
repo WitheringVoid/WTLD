@@ -1,29 +1,10 @@
 #include "../../include/controllers/LogController.h"
-#include "../../include/services/AuthService.h"
+#include "../../include/utils/AuthUtils.h"
 #include <drogon/HttpResponse.h>
 #include <drogon/MultiPart.h>
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <chrono>
-
-// Хелпер для парсинга PostgreSQL array формата {a,b,c}
-[[maybe_unused]] static std::vector<std::string> parsePgArray(const std::string &raw)
-{
-    std::vector<std::string> result;
-    if (raw.size() <= 2)
-        return result;
-    std::string inner = raw.substr(1, raw.size() - 2);
-    std::stringstream ss(inner);
-    std::string item;
-    while (std::getline(ss, item, ','))
-    {
-        if (item.size() >= 2 && item.front() == '"' && item.back() == '"')
-            item = item.substr(1, item.size() - 2);
-        if (!item.empty())
-            result.push_back(item);
-    }
-    return result;
-}
 
 namespace wtld
 {
@@ -42,7 +23,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -132,7 +113,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -204,7 +185,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -268,7 +249,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -305,7 +286,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -384,32 +365,6 @@ namespace wtld
                 resp->setBody("{\"status\":\"error\",\"message\":\"Internal server error\"}");
                 callback(resp);
             }
-        }
-
-        int LogController::getUserIdFromRequest(const drogon::HttpRequestPtr &req)
-        {
-            try
-            {
-                return req->attributes()->get<int>("userId");
-            }
-            catch (...)
-            {
-            }
-
-            auto authHeader = req->getHeader("Authorization");
-            if (authHeader.empty() || authHeader.substr(0, 7) != "Bearer ")
-                return -1;
-
-            auto token = authHeader.substr(7);
-            auto authService = std::make_shared<services::AuthService>(dbClient_);
-            auto user = authService->validateToken(token);
-
-            if (user)
-            {
-                req->attributes()->insert("userId", user->id);
-                return user->id;
-            }
-            return -1;
         }
 
     } // namespace controllers

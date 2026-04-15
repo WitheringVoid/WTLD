@@ -8,44 +8,42 @@
 
 namespace wtld
 {
-namespace controllers
-{
+    namespace controllers
+    {
 
-class LogController : public drogon::HttpController<LogController>
-{
-public:
-    LogController();
+        class LogController : public drogon::HttpController<LogController>
+        {
+        public:
+            LogController();
 
-    METHOD_LIST_BEGIN
-        ADD_METHOD_TO(LogController::uploadLog, "/api/logs/upload", drogon::Post);
-        ADD_METHOD_TO(LogController::getLogs, "/api/logs", drogon::Get);
-        ADD_METHOD_TO(LogController::getLogById, "/api/logs/{id}", drogon::Get);
-        ADD_METHOD_TO(LogController::deleteLog, "/api/logs/{id}", drogon::Delete);
-        ADD_METHOD_TO(LogController::getLogStats, "/api/logs/{id}/stats", drogon::Get);
-    METHOD_LIST_END
+            METHOD_LIST_BEGIN
+            ADD_METHOD_TO(LogController::uploadLog, "/api/logs/upload", drogon::Post);
+            ADD_METHOD_TO(LogController::getLogs, "/api/logs", drogon::Get);
+            ADD_METHOD_TO(LogController::getLogById, "/api/logs/{id}", drogon::Get);
+            ADD_METHOD_TO(LogController::deleteLog, "/api/logs/{id}", drogon::Delete);
+            ADD_METHOD_TO(LogController::getLogStats, "/api/logs/{id}/stats", drogon::Get);
+            METHOD_LIST_END
 
-    void uploadLog(const drogon::HttpRequestPtr &req,
-                   std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+            void uploadLog(const drogon::HttpRequestPtr &req,
+                           std::function<void(const drogon::HttpResponsePtr &)> &&callback);
 
-    void getLogs(const drogon::HttpRequestPtr &req,
-                 std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+            void getLogs(const drogon::HttpRequestPtr &req,
+                         std::function<void(const drogon::HttpResponsePtr &)> &&callback);
 
-    void getLogById(const drogon::HttpRequestPtr &req,
-                    std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+            void getLogById(const drogon::HttpRequestPtr &req,
+                            std::function<void(const drogon::HttpResponsePtr &)> &&callback);
 
-    void deleteLog(const drogon::HttpRequestPtr &req,
-                   std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+            void deleteLog(const drogon::HttpRequestPtr &req,
+                           std::function<void(const drogon::HttpResponsePtr &)> &&callback);
 
-    void getLogStats(const drogon::HttpRequestPtr &req,
-                     std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+            void getLogStats(const drogon::HttpRequestPtr &req,
+                             std::function<void(const drogon::HttpResponsePtr &)> &&callback);
 
-private:
-    std::shared_ptr<services::LogParserService> logParserService_;
-    std::shared_ptr<services::LogAnalysisService> logAnalysisService_;
-    drogon::orm::DbClientPtr dbClient_;
+        private:
+            std::shared_ptr<services::LogParserService> logParserService_;
+            std::shared_ptr<services::LogAnalysisService> logAnalysisService_;
+            drogon::orm::DbClientPtr dbClient_;
+        };
 
-    int getUserIdFromRequest(const drogon::HttpRequestPtr &req);
-};
-
-} // namespace controllers
+    } // namespace controllers
 } // namespace wtld

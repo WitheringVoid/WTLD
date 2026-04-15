@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { logsApi, analyticsApi } from '@/api';
 import type { LogFile, AnalysisResult } from '@/types/api';
 import toast from 'react-hot-toast';
+import AnalyticsCard from '@/components/AnalyticsCard';
+import LoadingState from '@/components/LoadingState';
 
 export default function LogDetail() {
   const { id } = useParams<{ id: string }>();
@@ -34,11 +36,7 @@ export default function LogDetail() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400">Загрузка...</div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (!log) {
@@ -88,8 +86,8 @@ export default function LogDetail() {
         <button
           onClick={() => setActiveTab('entries')}
           className={`px-4 py-2 font-medium transition-colors ${activeTab === 'entries'
-              ? 'text-primary-400 border-b-2 border-primary-400'
-              : 'text-gray-400 hover:text-white'
+            ? 'text-primary-400 border-b-2 border-primary-400'
+            : 'text-gray-400 hover:text-white'
             }`}
         >
           Записи ({log.entries?.length || 0})
@@ -97,8 +95,8 @@ export default function LogDetail() {
         <button
           onClick={() => setActiveTab('analytics')}
           className={`px-4 py-2 font-medium transition-colors ${activeTab === 'analytics'
-              ? 'text-primary-400 border-b-2 border-primary-400'
-              : 'text-gray-400 hover:text-white'
+            ? 'text-primary-400 border-b-2 border-primary-400'
+            : 'text-gray-400 hover:text-white'
             }`}
         >
           Аналитика ({analytics.length})

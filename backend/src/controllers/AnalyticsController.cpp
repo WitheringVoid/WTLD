@@ -1,5 +1,5 @@
 #include "../../include/controllers/AnalyticsController.h"
-#include "../../include/services/AuthService.h"
+#include "../../include/utils/AuthUtils.h"
 #include <drogon/HttpResponse.h>
 #include <nlohmann/json.hpp>
 #include <sstream>
@@ -9,25 +9,6 @@ namespace wtld
 {
     namespace controllers
     {
-
-        // Хелпер для парсинга PostgreSQL array формата {a,b,c}
-        static std::vector<std::string> parsePgArray(const std::string &raw)
-        {
-            std::vector<std::string> result;
-            if (raw.size() <= 2)
-                return result;
-            std::string inner = raw.substr(1, raw.size() - 2);
-            std::stringstream ss(inner);
-            std::string item;
-            while (std::getline(ss, item, ','))
-            {
-                if (item.size() >= 2 && item.front() == '"' && item.back() == '"')
-                    item = item.substr(1, item.size() - 2);
-                if (!item.empty())
-                    result.push_back(item);
-            }
-            return result;
-        }
 
         AnalyticsController::AnalyticsController()
         {
@@ -40,7 +21,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -129,7 +110,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -143,7 +124,7 @@ namespace wtld
 
                 auto result = dbClient_->execSqlSync(
                     "SELECT id, analysis_type, severity_level, title, description, data, detected_patterns, is_anomaly, created_at "
-                    "FROM log_analytics WHERE log_file_id = $1 AND user_id = $1",
+                    "FROM log_analytics WHERE log_file_id = $1 AND user_id = $2",
                     logId, userId);
 
                 nlohmann::json analytics = nlohmann::json::array();
@@ -156,7 +137,7 @@ namespace wtld
                     item["title"] = row["title"].as<std::string>();
                     item["description"] = row["description"].as<std::string>();
                     item["data"] = nlohmann::json::parse(row["data"].as<std::string>());
-                    item["detected_patterns"] = parsePgArray(row["detected_patterns"].as<std::string>());
+                    item["detected_patterns"] = utils::parsePgArray(row["detected_patterns"].as<std::string>());
                     item["is_anomaly"] = row["is_anomaly"].as<bool>();
                     item["created_at"] = row["created_at"].as<std::string>();
                     analytics.push_back(item);
@@ -186,7 +167,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -242,7 +223,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -291,7 +272,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -361,7 +342,7 @@ namespace wtld
         {
             try
             {
-                int userId = getUserIdFromRequest(req);
+                int userId = utils::getUserIdFromRequest(req, dbClient_);
                 if (userId < 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
@@ -413,35 +394,6 @@ namespace wtld
                 resp->setBody("Internal server error");
                 callback(resp);
             }
-        }
-
-        int AnalyticsController::getUserIdFromRequest(const drogon::HttpRequestPtr &req)
-        {
-            try
-            {
-                return req->attributes()->get<int>("userId");
-            }
-            catch (...)
-            {
-            }
-
-            auto authHeader = req->getHeader("Authorization");
-            if (authHeader.empty() || authHeader.substr(0, 7) != "Bearer ")
-            {
-                return -1;
-            }
-
-            auto token = authHeader.substr(7);
-            auto authService = std::make_shared<services::AuthService>(dbClient_);
-            auto user = authService->validateToken(token);
-
-            if (user)
-            {
-                req->attributes()->insert("userId", user->id);
-                return user->id;
-            }
-
-            return -1;
         }
 
     } // namespace controllers

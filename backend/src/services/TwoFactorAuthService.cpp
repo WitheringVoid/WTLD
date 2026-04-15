@@ -1,6 +1,6 @@
 #include "../../include/services/TwoFactorAuthService.h"
-#include <jwt-cpp/jwt.h>
 #include <openssl/rand.h>
+#include <openssl/hmac.h>
 #include <chrono>
 #include <iomanip>
 #include <sstream>
@@ -119,45 +119,106 @@ namespace wtld
             }
         }
 
+        // Декодирование Base32 строки в бинарные данные
+        static std::string base32Decode(const std::string &encoded)
+        {
+            std::string result;
+            uint32_t buffer = 0;
+            int bitsLeft = 0;
+
+            for (char c : encoded)
+            {
+                if (c == '=')
+                    break;
+
+                int val;
+                if (c >= 'A' && c <= 'Z')
+                    val = c - 'A';
+                else if (c >= '2' && c <= '7')
+                    val = c - '2' + 26;
+                else
+                    continue;
+
+                buffer = (buffer << 5) | val;
+                bitsLeft += 5;
+
+                if (bitsLeft >= 8)
+                {
+                    bitsLeft -= 8;
+                    result += static_cast<char>((buffer >> bitsLeft) & 0xFF);
+                }
+            }
+
+            return result;
+        }
+
+        // Генерация TOTP кода на основе секрета и временного шага (RFC 6238)
+        static std::string generateTOTPCode(const std::string &secret, uint64_t timeStep)
+        {
+            // Декодирование Base32 секрета в бинарные данные
+            std::string key = base32Decode(secret);
+            if (key.empty())
+                return "";
+
+            // Преобразование timeStep в big-endian байты (8 байт)
+            unsigned char timeBytes[8];
+            for (int i = 7; i >= 0; i--)
+            {
+                timeBytes[i] = static_cast<unsigned char>(timeStep & 0xFF);
+                timeStep >>= 8;
+            }
+
+            // HMAC-SHA1
+            unsigned char hmacResult[EVP_MAX_MD_SIZE];
+            unsigned int hmacLen = 0;
+            HMAC(EVP_sha1(),
+                 key.data(), static_cast<int>(key.size()),
+                 timeBytes, 8,
+                 hmacResult, &hmacLen);
+
+            // Dynamic truncation (RFC 4226 Section 5.4)
+            int offset = hmacResult[hmacLen - 1] & 0x0F;
+            uint32_t code = ((hmacResult[offset] & 0x7F) << 24) |
+                            ((hmacResult[offset + 1] & 0xFF) << 16) |
+                            ((hmacResult[offset + 2] & 0xFF) << 8) |
+                            (hmacResult[offset + 3] & 0xFF);
+
+            code %= 1000000;
+
+            // Форматирование в 6-значный код с ведущими нулями
+            std::ostringstream oss;
+            oss << std::setw(6) << std::setfill('0') << code;
+            return oss.str();
+        }
+
         bool TwoFactorAuthService::verifyCode(const std::string &secret, const std::string &code)
         {
             try
             {
-                // Получение текущего временного окна (30 секунд)
-                auto now = std::chrono::system_clock::now();
-                auto epoch = now.time_since_epoch();
-                auto seconds = std::chrono::duration_cast<std::chrono::seconds>(epoch).count();
-                uint64_t timeStep = seconds / 30;
-
-                // Декодирование Base32 секрета
-                std::string decodedSecret;
-                const std::string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-
-                for (char c : secret)
-                {
-                    if (c == '=')
-                        break;
-                    auto pos = base32Chars.find(c);
-                    if (pos != std::string::npos)
-                    {
-                        decodedSecret += static_cast<char>(pos);
-                    }
-                }
-
-                // Генерация HMAC-SHA1
-                auto hmac = jwt::algorithm::hs256{""};
-                (void)hmac; // Подавление предупреждения
-
-                // Упрощенная реализация TOTP (для production используйте полноценную библиотеку)
-                // Здесь базовая проверка по 6 цифрам
+                // Валидация формата кода
                 if (code.length() != 6 || !std::all_of(code.begin(), code.end(), ::isdigit))
                 {
                     return false;
                 }
 
-                // Для production: реализуйте полноценный TOTP алгоритм
-                // Пока принимаем любой 6-значный код для демонстрации
-                return true;
+                // Получение текущего временного окна (30 секунд)
+                auto now = std::chrono::system_clock::now();
+                auto epoch = now.time_since_epoch();
+                auto seconds = std::chrono::duration_cast<std::chrono::seconds>(epoch).count();
+                uint64_t currentTimeStep = seconds / 30;
+
+                // Проверяем текущий и соседние временные шаги (окно ±1 для компенсации рассинхронизации)
+                const int windowSize = 1;
+                for (int i = -windowSize; i <= windowSize; i++)
+                {
+                    std::string generatedCode = generateTOTPCode(secret, currentTimeStep + i);
+                    if (!generatedCode.empty() && generatedCode == code)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
             catch (const std::exception &e)
             {

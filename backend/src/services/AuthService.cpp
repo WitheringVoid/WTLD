@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <vector>
 #include <drogon/HttpAppFramework.h>
+#include <drogon/config.h>
 
 namespace wtld
 {
@@ -19,6 +20,74 @@ namespace wtld
         {
             SodiumInit() { sodium_init(); }
         } sodiumInitGuard;
+
+        // Чтение JWT конфигурации из config.json
+        static std::string getConfigValue(const std::string &key, const std::string &defaultVal)
+        {
+            try
+            {
+                auto &cfg = drogon::app().getConfig();
+                if (cfg.isMember("jwt") && cfg["jwt"].isMember(key))
+                {
+                    return cfg["jwt"][key].asString();
+                }
+            }
+            catch (...)
+            {
+            }
+            return defaultVal;
+        }
+
+        static int getConfigInt(const std::string &key, int defaultVal)
+        {
+            try
+            {
+                auto &cfg = drogon::app().getConfig();
+                if (cfg.isMember("jwt") && cfg["jwt"].isMember(key))
+                {
+                    return cfg["jwt"][key].asInt();
+                }
+            }
+            catch (...)
+            {
+            }
+            return defaultVal;
+        }
+
+        std::string AuthService::getJwtSecret()
+        {
+            return getConfigValue("secret", "wtld-secret-key-change-in-production");
+        }
+
+        std::string AuthService::getJwtIssuer()
+        {
+            return getConfigValue("issuer", "wtld-auth");
+        }
+
+        int AuthService::getJwtExpirationHours()
+        {
+            return getConfigInt("expiration_hours", 24);
+        }
+
+        // Парсинг PostgreSQL timestamp формата: "2024-01-15 10:30:45.123456" -> time_t
+        static std::time_t parsePgTimestamp(const std::string &ts)
+        {
+            if (ts.empty())
+                return 0;
+
+            std::tm tm = {};
+            std::istringstream ss(ts);
+            ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+
+            if (ss.fail())
+                return 0;
+
+#ifdef _WIN32
+            return _mkgmtime(&tm);
+#else
+            return timegm(&tm);
+#endif
+        }
 
         AuthService::AuthService(const drogon::orm::DbClientPtr &dbClient)
             : dbClient_(dbClient) {}
@@ -58,8 +127,12 @@ namespace wtld
                 user.username = insertResult[0]["username"].as<std::string>();
                 user.email = insertResult[0]["email"].as<std::string>();
                 user.password_hash = passwordHash;
-                user.created_at = std::time(nullptr);
-                user.updated_at = std::time(nullptr);
+
+                // Чтение timestamps из БД
+                auto createdAtStr = insertResult[0]["created_at"].as<std::string>();
+                auto updatedAtStr = insertResult[0]["updated_at"].as<std::string>();
+                user.created_at = parsePgTimestamp(createdAtStr);
+                user.updated_at = parsePgTimestamp(updatedAtStr);
                 user.last_login = 0;
                 user.is_active = insertResult[0]["is_active"].as<bool>();
 
@@ -93,9 +166,14 @@ namespace wtld
                 user.username = result[0]["username"].as<std::string>();
                 user.email = result[0]["email"].as<std::string>();
                 user.password_hash = result[0]["password_hash"].as<std::string>();
-                user.created_at = std::time(nullptr); // TODO: convert from timestamp
-                user.updated_at = std::time(nullptr);
-                user.last_login = 0;
+
+                // Чтение timestamps из БД
+                auto createdAtStr = result[0]["created_at"].as<std::string>();
+                auto updatedAtStr = result[0]["updated_at"].as<std::string>();
+                auto lastLoginStr = result[0]["last_login"].as<std::string>();
+                user.created_at = parsePgTimestamp(createdAtStr);
+                user.updated_at = parsePgTimestamp(updatedAtStr);
+                user.last_login = lastLoginStr.empty() ? 0 : parsePgTimestamp(lastLoginStr);
                 user.is_active = result[0]["is_active"].as<bool>();
 
                 if (!user.is_active)
@@ -140,9 +218,14 @@ namespace wtld
                 user.username = result[0]["username"].as<std::string>();
                 user.email = result[0]["email"].as<std::string>();
                 user.password_hash = result[0]["password_hash"].as<std::string>();
-                user.created_at = std::time(nullptr);
-                user.updated_at = std::time(nullptr);
-                user.last_login = 0;
+
+                // Чтение timestamps из БД
+                auto createdAtStr = result[0]["created_at"].as<std::string>();
+                auto updatedAtStr = result[0]["updated_at"].as<std::string>();
+                auto lastLoginStr = result[0]["last_login"].as<std::string>();
+                user.created_at = parsePgTimestamp(createdAtStr);
+                user.updated_at = parsePgTimestamp(updatedAtStr);
+                user.last_login = lastLoginStr.empty() ? 0 : parsePgTimestamp(lastLoginStr);
                 user.is_active = result[0]["is_active"].as<bool>();
 
                 return user;
@@ -158,16 +241,18 @@ namespace wtld
         {
             try
             {
-                const std::string secret = "wtld-secret-key-change-in-production";
+                const std::string secret = getJwtSecret();
+                const std::string issuer = getJwtIssuer();
+                const int expirationHours = getJwtExpirationHours();
 
                 auto token = jwt::create()
-                                 .set_issuer("wtld-auth")
+                                 .set_issuer(issuer)
                                  .set_type("JWT")
                                  .set_id(std::to_string(user.id))
                                  .set_payload_claim("username", jwt::claim(user.username))
                                  .set_payload_claim("email", jwt::claim(user.email))
                                  .set_issued_at(std::chrono::system_clock::now())
-                                 .set_expires_at(std::chrono::system_clock::now() + std::chrono::hours{24})
+                                 .set_expires_at(std::chrono::system_clock::now() + std::chrono::hours{expirationHours})
                                  .sign(jwt::algorithm::hs256{secret});
 
                 return token;
@@ -183,12 +268,13 @@ namespace wtld
         {
             try
             {
-                const std::string secret = "wtld-secret-key-change-in-production";
+                const std::string secret = getJwtSecret();
+                const std::string issuer = getJwtIssuer();
 
                 auto decoded = jwt::decode(token);
                 auto verifier = jwt::verify()
                                     .allow_algorithm(jwt::algorithm::hs256{secret})
-                                    .with_issuer("wtld-auth");
+                                    .with_issuer(issuer);
 
                 verifier.verify(decoded);
 
