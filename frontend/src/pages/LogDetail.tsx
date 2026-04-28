@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { logsApi, analyticsApi } from '@/api';
 import type { LogFile, AnalysisResult } from '@/types/api';
 import toast from 'react-hot-toast';
-import AnalyticsCard from '@/components/AnalyticsCard';
+//import AnalyticsCard from '@/components/AnalyticsCard';
 import LoadingState from '@/components/LoadingState';
 
 export default function LogDetail() {
