@@ -27,18 +27,16 @@ int main()
 
         // Регистрация глобальных фильтров (middleware)
         // Rate Limiting применяется ко ВСЕМ запросам
-        auto rateLimitFilter = std::make_shared<wtld::middleware::RateLimitMiddleware>();
-        drogon::app().registerFilter("/api/*", rateLimitFilter);
+        drogon::app().registerFilter("/api/*", wtld::middleware::RateLimitMiddleware::newFilter());
 
         // JWT middleware для защищённых endpoint-ов
         // Применяем ко всем API кроме auth/login и auth/register
-        auto jwtFilter = std::make_shared<wtld::middleware::JwtMiddleware>();
-        drogon::app().registerFilter("/api/logs/*", jwtFilter);
-        drogon::app().registerFilter("/api/analytics/*", jwtFilter);
-        drogon::app().registerFilter("/api/2fa/*", jwtFilter);
-        drogon::app().registerFilter("/api/auth/profile", jwtFilter);
-        drogon::app().registerFilter("/api/auth/logout", jwtFilter);
-        drogon::app().registerFilter("/api/ws/status", jwtFilter);
+        drogon::app().registerFilter("/api/logs/*", wtld::middleware::JwtMiddleware::newFilter());
+        drogon::app().registerFilter("/api/analytics/*", wtld::middleware::JwtMiddleware::newFilter());
+        drogon::app().registerFilter("/api/2fa/*", wtld::middleware::JwtMiddleware::newFilter());
+        drogon::app().registerFilter("/api/auth/profile", wtld::middleware::JwtMiddleware::newFilter());
+        drogon::app().registerFilter("/api/auth/logout", wtld::middleware::JwtMiddleware::newFilter());
+        drogon::app().registerFilter("/api/ws/status", wtld::middleware::JwtMiddleware::newFilter());
 
         // Регистрация WebSocket обработчика
         drogon::app().registerWebSocketHandler(
@@ -46,17 +44,18 @@ int main()
             [](const drogon::WebSocketConnectionPtr &conn)
             {
                 // При подключении извлекаем userId из query-параметра token
-                std::string token;
-                auto &req = conn->request();
-                if (req)
+                auto req = conn->request();
+                if (!req)
                 {
-                    token = req->getParameter("token");
+                    conn->close();
+                    return;
                 }
 
+                auto token = req->getParameter("token");
                 if (token.empty())
                 {
                     conn->send(R"({"type":"error","message":"Missing token"})");
-                    conn->disconnect();
+                    conn->close();
                     return;
                 }
 
@@ -68,7 +67,7 @@ int main()
                 if (!user)
                 {
                     conn->send(R"({"type":"error","message":"Invalid token"})");
-                    conn->disconnect();
+                    conn->close();
                     return;
                 }
 
@@ -85,22 +84,20 @@ int main()
             [](const drogon::WebSocketConnectionPtr &conn)
             {
                 // При отключении удаляем клиента
-                std::string token;
-                auto &req = conn->request();
+                auto req = conn->request();
                 if (req)
                 {
-                    token = req->getParameter("token");
-                }
-
-                if (!token.empty())
-                {
-                    auto dbClient = drogon::app().getDbClient();
-                    auto authService = std::make_shared<wtld::services::AuthService>(dbClient);
-                    auto user = authService->validateToken(token);
-                    if (user)
+                    auto token = req->getParameter("token");
+                    if (!token.empty())
                     {
-                        wtld::services::WebSocketService::instance().removeClient(user->id, conn);
-                        LOG_INFO << "WebSocket client disconnected for user " << user->id;
+                        auto dbClient = drogon::app().getDbClient();
+                        auto authService = std::make_shared<wtld::services::AuthService>(dbClient);
+                        auto user = authService->validateToken(token);
+                        if (user)
+                        {
+                            wtld::services::WebSocketService::instance().removeClient(user->id, conn);
+                            LOG_INFO << "WebSocket client disconnected for user " << user->id;
+                        }
                     }
                 }
             });

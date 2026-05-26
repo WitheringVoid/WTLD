@@ -1,40 +1,34 @@
-```
-# Compiled and build artifacts
-*.o
-*.obj
+# Build directories
+backend/build/
+backend/out/
+backend/cmake-build-*/
+
+# VS Code
+.vscode/
+.vs/
+
+# vcpkg
+/vcpkg/
+/installed/
+
+# Compiled files
 *.exe
 *.dll
+*.lib
 *.so
-*.a
-*.out
-build/
-dist/
+*.dylib
+*.o
+*.obj
 
-# Dependencies
-venv/
-.venv/
-node_modules/
-__pycache__/
-.mypy_cache/
-.pytest_cache/
-target/
-.gradle/
-
-# Logs and temp files
+# Logs
+logs/
 *.log
-*.tmp
-*.swp
 
-# Environment
+# Environment files
 .env
 .env.local
-*.env.*
 
-# Editors
-.vscode/
-.idea/
-
-# System files
-.DS_Store
-Thumbs.db
-```
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env
