@@ -1,20 +1,26 @@
 #pragma once
-#include <drogon/HttpController.h>
+#include <drogon/WebSocketController.h>
 
 namespace wtld
 {
     namespace controllers
     {
 
-        class WebSocketController : public drogon::HttpController<WebSocketController>
+        class WebSocketController : public drogon::WebSocketController<WebSocketController>
         {
         public:
-            METHOD_LIST_BEGIN
-            ADD_METHOD_TO(WebSocketController::getStatus, "/api/ws/status", drogon::Get);
-            METHOD_LIST_END
+            void handleNewConnection(const HttpRequestPtr &req,
+                                     WebSocketConnectionPtr &&wsConnPtr) override;
 
-            void getStatus(const drogon::HttpRequestPtr &req,
-                           std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+            void handleNewMessage(const WebSocketConnectionPtr &wsConnPtr,
+                                  std::string &&message,
+                                  const WebSocketMessageType &type) override;
+
+            void handleConnectionClosed(const WebSocketConnectionPtr &wsConnPtr) override;
+
+            WS_PATH_LIST_BEGIN
+            WS_PATH_ADD("/api/ws"); // Frontend: ws://host:8080/api/ws?token=xxx
+            WS_PATH_LIST_END
         };
 
     } // namespace controllers

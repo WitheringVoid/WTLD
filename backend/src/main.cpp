@@ -7,7 +7,7 @@
 #include "../include/controllers/LogController.h"
 #include "../include/controllers/AnalyticsController.h"
 #include "../include/controllers/TwoFAController.h"
-#include "../include/controllers/WebSocketController.h"
+#include "../include/controllers/HttpStatusController.h"
 
 // Middleware
 #include "../include/middleware/JwtMiddleware.h"
@@ -27,80 +27,25 @@ int main()
 
         // Регистрация глобальных фильтров (middleware)
         // Rate Limiting применяется ко ВСЕМ запросам
-        drogon::app().registerFilter("/api/*", wtld::middleware::RateLimitMiddleware::newFilter());
+        drogon::app().registerFilter(std::make_shared<wtld::middleware::RateLimitMiddleware>(), {"api/*"});
 
         // JWT middleware для защищённых endpoint-ов
         // Применяем ко всем API кроме auth/login и auth/register
-        drogon::app().registerFilter("/api/logs/*", wtld::middleware::JwtMiddleware::newFilter());
-        drogon::app().registerFilter("/api/analytics/*", wtld::middleware::JwtMiddleware::newFilter());
-        drogon::app().registerFilter("/api/2fa/*", wtld::middleware::JwtMiddleware::newFilter());
-        drogon::app().registerFilter("/api/auth/profile", wtld::middleware::JwtMiddleware::newFilter());
-        drogon::app().registerFilter("/api/auth/logout", wtld::middleware::JwtMiddleware::newFilter());
-        drogon::app().registerFilter("/api/ws/status", wtld::middleware::JwtMiddleware::newFilter());
+        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/logs/*"});
+        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/analytics/*"});
+        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/2fa/*"});
+        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/auth/profile"});
+        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/auth/logout"});
+        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/ws/status"});
 
-        // Регистрация WebSocket обработчика
-        drogon::app().registerWebSocketHandler(
-            "/api/ws",
-            [](const drogon::WebSocketConnectionPtr &conn)
-            {
-                // При подключении извлекаем userId из query-параметра token
-                auto req = conn->request();
-                if (!req)
-                {
-                    conn->close();
-                    return;
-                }
-
-                auto token = req->getParameter("token");
-                if (token.empty())
-                {
-                    conn->send(R"({"type":"error","message":"Missing token"})");
-                    conn->close();
-                    return;
-                }
-
-                // Валидируем токен
-                auto dbClient = drogon::app().getDbClient();
-                auto authService = std::make_shared<wtld::services::AuthService>(dbClient);
-                auto user = authService->validateToken(token);
-
-                if (!user)
-                {
-                    conn->send(R"({"type":"error","message":"Invalid token"})");
-                    conn->close();
-                    return;
-                }
-
-                // Регистрируем клиента
-                wtld::services::WebSocketService::instance().addClient(user->id, conn);
-
-                LOG_INFO << "WebSocket client connected for user " << user->id;
-            },
-            [](const drogon::WebSocketConnectionPtr &conn, const std::string &message)
-            {
-                // Обработка входящих сообщений от клиента
-                LOG_DEBUG << "WebSocket message from user: " << message;
-            },
-            [](const drogon::WebSocketConnectionPtr &conn)
-            {
-                // При отключении удаляем клиента
-                auto req = conn->request();
-                if (req)
-                {
-                    auto token = req->getParameter("token");
-                    if (!token.empty())
-                    {
-                        auto dbClient = drogon::app().getDbClient();
-                        auto authService = std::make_shared<wtld::services::AuthService>(dbClient);
-                        auto user = authService->validateToken(token);
-                        if (user)
-                        {
-                            wtld::services::WebSocketService::instance().removeClient(user->id, conn);
-                            LOG_INFO << "WebSocket client disconnected for user " << user->id;
-                        }
-                    }
-                }
-            });
+        // Регистрация HTTP-контроллеров
+        drogon::app().registerController<wtld::controllers::AuthController>();
+        drogon::app().registerController<wtld::controllers::LogController>();
+        drogon::app().registerController<wtld::controllers::AnalyticsController>();
+        drogon::app().registerController<wtld::controllers::TwoFAController>();
+        drogon::app().registerController<wtld::controllers::HttpStatusController>();
+        // Регистрация настоящего WebSocket-контроллера (Drogon 1.9.x API)
+        drogon::app().regWebsockCtrl<wtld::controllers::WebSocketController>();
 
         LOG_INFO << "Starting WTLD Backend Server...";
         LOG_INFO << "Server will listen on: 0.0.0.0:8080";
