@@ -8,7 +8,6 @@
 #include <iomanip>
 #include <vector>
 #include <drogon/HttpAppFramework.h>
-#include <drogon/config.h>
 
 namespace wtld
 {

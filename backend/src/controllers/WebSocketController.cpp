@@ -8,20 +8,33 @@ namespace wtld
     namespace controllers
     {
 
+        WebSocketController::WebSocketController()
+        {
+            // Инициализация сервисов - здесь можно использовать DI контейнер или создать экземпляры
+            // Для простоты создаем экземпляры напрямую
+            try {
+                auto &app = drogon::app();
+                authService_ = std::make_shared<services::AuthService>(app.getDbClient("default"));
+                webSocketService_ = &services::WebSocketService::instance();
+            } catch (...) {
+                LOG_ERROR << "Failed to initialize WebSocketController services";
+            }
+        }
+
         void WebSocketController::handleNewConnection(const HttpRequestPtr &req,
-                                                      WebSocketConnectionPtr &&wsConnPtr)
+                                                      WebSocketConnectionPtr &wsConnPtr)
         {
             // Получаем токен из query-параметра
             std::string token = req->getParameter("token");
 
-            if (token.empty())
+            if (token.empty() || !authService_)
             {
                 wsConnPtr->forceClose();
                 return;
             }
 
             // Валидируем токен
-            auto userOpt = services::AuthService::instance().validateToken(token);
+            auto userOpt = authService_->validateToken(token);
 
             if (!userOpt.has_value())
             {
@@ -30,12 +43,14 @@ namespace wtld
             }
 
             // Сохраняем соединение
-            services::WebSocketService::instance().addConnection(wsConnPtr, userOpt.value());
+            if (webSocketService_) {
+                webSocketService_->addClient(userOpt.value().id, wsConnPtr);
+            }
             LOG_INFO << "WebSocket connected for user " << userOpt.value().id;
         }
 
         void WebSocketController::handleNewMessage(const WebSocketConnectionPtr &wsConnPtr,
-                                                   std::string &&message,
+                                                   std::string &message,
                                                    const WebSocketMessageType &type)
         {
             LOG_DEBUG << "WebSocket message: " << message;
@@ -44,7 +59,9 @@ namespace wtld
 
         void WebSocketController::handleConnectionClosed(const WebSocketConnectionPtr &wsConnPtr)
         {
-            services::WebSocketService::instance().removeConnection(wsConnPtr);
+            if (webSocketService_) {
+                webSocketService_->removeClient(0, wsConnPtr);
+            }
             LOG_INFO << "WebSocket disconnected";
         }
 

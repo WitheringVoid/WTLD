@@ -27,16 +27,16 @@ int main()
 
         // Регистрация глобальных фильтров (middleware)
         // Rate Limiting применяется ко ВСЕМ запросам
-        drogon::app().registerFilter(std::make_shared<wtld::middleware::RateLimitMiddleware>(), {"api/*"});
+        drogon::app().registerFilter(&wtld::middleware::RateLimitMiddleware::doFilter, {"api/*"});
 
         // JWT middleware для защищённых endpoint-ов
         // Применяем ко всем API кроме auth/login и auth/register
-        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/logs/*"});
-        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/analytics/*"});
-        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/2fa/*"});
-        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/auth/profile"});
-        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/auth/logout"});
-        drogon::app().registerFilter(std::make_shared<wtld::middleware::JwtMiddleware>(), {"/api/ws/status"});
+        drogon::app().registerFilter(&wtld::middleware::JwtMiddleware::doFilter, {"/api/logs/*"});
+        drogon::app().registerFilter(&wtld::middleware::JwtMiddleware::doFilter, {"/api/analytics/*"});
+        drogon::app().registerFilter(&wtld::middleware::JwtMiddleware::doFilter, {"/api/2fa/*"});
+        drogon::app().registerFilter(&wtld::middleware::JwtMiddleware::doFilter, {"/api/auth/profile"});
+        drogon::app().registerFilter(&wtld::middleware::JwtMiddleware::doFilter, {"/api/auth/logout"});
+        drogon::app().registerFilter(&wtld::middleware::JwtMiddleware::doFilter, {"/api/ws/status"});
 
         // Регистрация HTTP-контроллеров
         drogon::app().registerController<wtld::controllers::AuthController>();
@@ -44,8 +44,8 @@ int main()
         drogon::app().registerController<wtld::controllers::AnalyticsController>();
         drogon::app().registerController<wtld::controllers::TwoFAController>();
         drogon::app().registerController<wtld::controllers::HttpStatusController>();
-        // Регистрация настоящего WebSocket-контроллера (Drogon 1.9.x API)
-        drogon::app().regWebsockCtrl<wtld::controllers::WebSocketController>();
+        // Регистрация WebSocket-контроллера (Drogon 1.9.x API)
+        drogon::app().registerWebSocketController<wtld::controllers::WebSocketController>();
 
         LOG_INFO << "Starting WTLD Backend Server...";
         LOG_INFO << "Server will listen on: 0.0.0.0:8080";
