@@ -71,7 +71,7 @@ export default function Settings() {
   };
 
   const handle2FASetup = () => {
-    navigate('/2fa/setup');
+    navigate('/app/2fa/setup');
   };
 
   const handle2FADisable = async () => {
