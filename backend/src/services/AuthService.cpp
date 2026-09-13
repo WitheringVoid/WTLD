@@ -236,6 +236,55 @@ namespace wtld
             }
         }
 
+        bool AuthService::isTwoFactorEnabled(int userId)
+        {
+            try
+            {
+                auto r = dbClient_->execSqlSync(
+                    "SELECT is_enabled FROM two_factor_auth WHERE user_id = $1", userId);
+                return !r.empty() && r[0]["is_enabled"].as<bool>();
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+
+        std::string AuthService::generateTwoFactorToken(const models::User &user)
+        {
+            auto now = std::chrono::system_clock::now();
+            return jwt::create()
+                .set_issuer(getConfigValue("issuer", "wtld-auth"))
+                .set_issued_at(now)
+                .set_expires_at(now + std::chrono::minutes{5})
+                .set_id(std::to_string(user.id))
+                .set_payload_claim("scope", jwt::claim(std::string("2fa")))
+                .sign(jwt::algorithm::hs256{getConfigValue("secret", "wtld-secret-key-change-in-production")});
+        }
+
+        std::optional<int> AuthService::validateTwoFactorToken(const std::string &token)
+        {
+            try
+            {
+                auto decoded = jwt::decode(token);
+                jwt::verify()
+                    .allow_algorithm(jwt::algorithm::hs256{getConfigValue("secret", "wtld-secret-key-change-in-production")})
+                    .with_issuer(getConfigValue("issuer", "wtld-auth"))
+                    .verify(decoded);
+
+                if (!decoded.has_payload_claim("scope") ||
+                    decoded.get_payload_claim("scope").as_string() != "2fa")
+                {
+                    return std::nullopt;
+                }
+                return std::stoi(decoded.get_id());
+            }
+            catch (...)
+            {
+                return std::nullopt;
+            }
+        }
+
         std::string AuthService::generateToken(const models::User &user)
         {
             try

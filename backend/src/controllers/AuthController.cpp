@@ -94,6 +94,20 @@ namespace wtld
                     return;
                 }
 
+                if (authService_->isTwoFactorEnabled(user->id))
+                {
+                    nlohmann::json result;
+                    result["status"] = "two_factor_required";
+                    result["two_factor_token"] = authService_->generateTwoFactorToken(*user);
+
+                    auto resp = drogon::HttpResponse::newHttpResponse();
+                    resp->setStatusCode(drogon::k200OK);
+                    resp->setContentTypeString("application/json");
+                    resp->setBody(result.dump());
+                    callback(resp);
+                    return; // Полный JWT НЕ выдаём, прерываем выполнение
+                }
+
                 auto token = authService_->generateToken(*user);
                 nlohmann::json result;
                 result["status"] = "success";

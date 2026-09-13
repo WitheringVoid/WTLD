@@ -22,7 +22,7 @@ export default function TwoFASetup() {
       const response = await twoFAApi.getStatus();
       if (response.data.data.is_enabled) {
         toast.error('2FA уже включен');
-        navigate('/settings');
+        navigate('/app/settings');
       }
     } catch (error) {
       console.error('Failed to load 2FA status:', error);
@@ -36,7 +36,6 @@ export default function TwoFASetup() {
       setSecret(response.data.data.secret);
       setQrUri(response.data.data.qr_uri);
       setBackupCodes(response.data.data.backup_codes);
-      setStep('verify');
       toast.success('2FA настроен. Отсканируйте QR-код и введите код для подтверждения.');
     } catch (error) {
       toast.error('Не удалось настроить 2FA');
@@ -67,7 +66,7 @@ export default function TwoFASetup() {
 
   const handleFinish = () => {
     toast.success('Сохраните резервные коды в безопасном месте!');
-    navigate('/settings');
+    navigate('/app/settings');
   };
 
   const handleDownloadBackupCodes = () => {
@@ -240,7 +239,7 @@ export default function TwoFASetup() {
           )}
 
           <button
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/app/settings')}
             className="w-full mt-6 py-2 text-gray-400 hover:text-white transition-colors"
           >
             ← Вернуться к настройкам
