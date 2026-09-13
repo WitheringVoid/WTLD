@@ -43,6 +43,13 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
+      <Link
+        to="/"
+        className="absolute top-6 left-6 flex items-center space-x-2 text-gray-400 hover:text-primary-400 transition-colors"
+      >
+        <span className="text-xl">←</span>
+        <span>Вернуться на главную</span>
+      </Link>
       <div className="w-full max-w-md">
         <div className="bg-dark-800 rounded-lg shadow-xl p-8 border border-dark-700">
           <div className="text-center mb-8">

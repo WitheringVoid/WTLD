@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'; // 1. Добавлен useParams
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { useWebSocketStore } from '@/store/websocketStore';
@@ -28,6 +28,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicOnly({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   return isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <>{children}</>;
+}
+
+// Перехватывает старый вид ссылки /logs/:id и меняет на /app/logs/:id
+function LegacyLogRedirect() {
+  const params = useParams();
+  return <Navigate to={`/app/logs/${params.id}`} replace />;
 }
 
 function App() {
@@ -68,10 +74,19 @@ function App() {
         }}
       />
       <Routes>
+        {/* Публичные маршруты */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
         <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
 
+        {/* Страховочные редиректы со старых адресов на новые */}
+        <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+        <Route path="/logs" element={<Navigate to="/app/logs" replace />} />
+        <Route path="/logs/:id" element={<LegacyLogRedirect />} />
+        <Route path="/analytics" element={<Navigate to="/app/analytics" replace />} />
+        <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
+
+        {/* Защищенные маршруты внутри Layout */}
         <Route
           path="/app"
           element={

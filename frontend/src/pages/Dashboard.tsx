@@ -120,7 +120,7 @@ export default function Dashboard() {
       {/* Быстрые действия */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link
-          to="/logs"
+          to="/app/logs"
           className="bg-dark-800 rounded-lg p-6 border border-dark-700 hover:border-primary-500 transition-colors group"
         >
           <div className="flex items-center space-x-4">
@@ -135,7 +135,7 @@ export default function Dashboard() {
         </Link>
 
         <Link
-          to="/analytics"
+          to="/app/analytics"
           className="bg-dark-800 rounded-lg p-6 border border-dark-700 hover:border-primary-500 transition-colors group"
         >
           <div className="flex items-center space-x-4">
@@ -150,7 +150,7 @@ export default function Dashboard() {
         </Link>
 
         <Link
-          to="/settings"
+          to="/app/settings"
           className="bg-dark-800 rounded-lg p-6 border border-dark-700 hover:border-primary-500 transition-colors group"
         >
           <div className="flex items-center space-x-4">

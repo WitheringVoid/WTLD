@@ -11,10 +11,10 @@ export default function Layout() {
   const { events, clearEvents } = useWebSocketStore();
 
   const navItems = [
-    { path: '/dashboard', label: 'Дашборд', icon: '📊' },
-    { path: '/logs', label: 'Логи', icon: '📋' },
-    { path: '/analytics', label: 'Аналитика', icon: '📈' },
-    { path: '/settings', label: 'Настройки', icon: '⚙️' },
+    { path: '/app/dashboard', label: 'Дашборд', icon: '📊' },
+    { path: '/app/logs', label: 'Логи', icon: '📋' },
+    { path: '/app/analytics', label: 'Аналитика', icon: '📈' },
+    { path: '/app/settings', label: 'Настройки', icon: '⚙️' },
   ];
 
   // Обработка WebSocket событий

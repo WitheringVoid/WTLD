@@ -43,7 +43,7 @@ export default function LogDetail() {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold text-white mb-4">Лог не найден</h2>
-        <Link to="/logs" className="text-primary-400 hover:text-primary-300">
+        <Link to="/app/logs" className="text-primary-400 hover:text-primary-300">
           ← Вернуться к списку
         </Link>
       </div>
@@ -66,7 +66,7 @@ export default function LogDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link to="/logs" className="text-gray-400 hover:text-white text-sm">
+          <Link to="/app/logs" className="text-gray-400 hover:text-white text-sm">
             ← Назад к списку
           </Link>
           <h1 className="text-2xl font-bold text-white mt-2">{log.filename}</h1>
