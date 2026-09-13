@@ -1,8 +1,12 @@
 #pragma once
 #include <drogon/WebSocketController.h>
 #include <memory>
-#include "../../services/AuthService.h"
-#include "../../services/WebSocketService.h"
+#include "../services/AuthService.h"
+#include "../services/WebSocketService.h"
+
+using drogon::HttpRequestPtr;
+using drogon::WebSocketConnectionPtr;
+using drogon::WebSocketMessageType;
 
 namespace wtld
 {
@@ -12,12 +16,12 @@ namespace wtld
         {
         public:
             WebSocketController();
-            
+
             void handleNewConnection(const HttpRequestPtr &req,
-                                     WebSocketConnectionPtr &wsConnPtr) override;
+                                     const WebSocketConnectionPtr &wsConnPtr) override;
 
             void handleNewMessage(const WebSocketConnectionPtr &wsConnPtr,
-                                  std::string &message,
+                                  std::string &&message,
                                   const WebSocketMessageType &type) override;
 
             void handleConnectionClosed(const WebSocketConnectionPtr &wsConnPtr) override;
@@ -28,7 +32,7 @@ namespace wtld
 
         private:
             std::shared_ptr<services::AuthService> authService_;
-            std::shared_ptr<services::WebSocketService> webSocketService_;
+            services::WebSocketService *webSocketService_ = nullptr;
         };
 
     } // namespace controllers

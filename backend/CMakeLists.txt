@@ -13,7 +13,7 @@ set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 set(VCPKG_INSTALLED_DIR "${VCPKG_ROOT}/installed/x64-windows")
 set(VCPKG_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/include")
 set(VCPKG_LIB_DIR "${VCPKG_INSTALLED_DIR}/lib")
-set(VCPKG_BIN_DIR "${VCPKG_INSTALLED_DIR}/bin")
+set(VCPKG_BIN_DIR "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-windows/bin")
 
 # Сообщаем CMake где искать библиотеки
 list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x64-windows")

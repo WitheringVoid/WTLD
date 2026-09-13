@@ -2,7 +2,12 @@
   "name": "wtld-backend",
   "version": "1.0.0",
   "dependencies": [
-    "drogon",
+    {
+      "name": "drogon",
+      "features": [
+        "postgres"
+      ]
+    },
     "libpqxx",
     "jwt-cpp",
     "openssl",

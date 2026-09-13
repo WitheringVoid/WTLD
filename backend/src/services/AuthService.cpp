@@ -25,7 +25,7 @@ namespace wtld
         {
             try
             {
-                auto &cfg = drogon::app().getConfig();
+                auto &cfg = drogon::app().getCustomConfig();
                 if (cfg.isMember("jwt") && cfg["jwt"].isMember(key))
                 {
                     return cfg["jwt"][key].asString();
@@ -41,7 +41,7 @@ namespace wtld
         {
             try
             {
-                auto &cfg = drogon::app().getConfig();
+                auto &cfg = drogon::app().getCustomConfig();
                 if (cfg.isMember("jwt") && cfg["jwt"].isMember(key))
                 {
                     return cfg["jwt"][key].asInt();
