@@ -1,4 +1,5 @@
 #include "../../include/controllers/AuthController.h"
+#include "../../include/services/TwoFactorAuthService.h"
 #include <drogon/HttpResponse.h>
 #include <drogon/HttpAppFramework.h>
 #include <nlohmann/json.hpp>
@@ -108,6 +109,19 @@ namespace wtld
                     return; // Полный JWT НЕ выдаём, прерываем выполнение
                 }
 
+                if (authService_->isTwoFactorEnabled(user->id))
+                {
+                    nlohmann::json tfaResult;
+                    tfaResult["status"] = "two_factor_required";
+                    tfaResult["two_factor_token"] = authService_->generateTwoFactorToken(*user);
+                    auto resp = drogon::HttpResponse::newHttpResponse();
+                    resp->setStatusCode(drogon::k200OK);
+                    resp->setContentTypeString("application/json");
+                    resp->setBody(tfaResult.dump());
+                    callback(resp);
+                    return;
+                }
+
                 auto token = authService_->generateToken(*user);
                 nlohmann::json result;
                 result["status"] = "success";
@@ -188,6 +202,74 @@ namespace wtld
             catch (const std::exception &e)
             {
                 LOG_ERROR << "Get profile error: " << e.what();
+                auto resp = drogon::HttpResponse::newHttpResponse();
+                resp->setStatusCode(drogon::k500InternalServerError);
+                resp->setBody("{\"status\":\"error\",\"message\":\"Internal server error\"}");
+                callback(resp);
+            }
+        }
+
+        void AuthController::verifyTwoFactorLogin(const drogon::HttpRequestPtr &req,
+                                                  std::function<void(const drogon::HttpResponsePtr &)> &&callback)
+        {
+            try
+            {
+                auto json = nlohmann::json::parse(req->body());
+                std::string preToken = json.value("two_factor_token", "");
+                std::string code = json.value("code", "");
+                if (preToken.empty() || code.empty())
+                {
+                    auto resp = drogon::HttpResponse::newHttpResponse();
+                    resp->setStatusCode(drogon::k400BadRequest);
+                    resp->setBody("{\"status\":\"error\",\"message\":\"two_factor_token and code are required\"}");
+                    callback(resp);
+                    return;
+                }
+                auto userIdOpt = authService_->validateTwoFactorToken(preToken);
+                if (!userIdOpt)
+                {
+                    auto resp = drogon::HttpResponse::newHttpResponse();
+                    resp->setStatusCode(drogon::k401Unauthorized);
+                    resp->setBody("{\"status\":\"error\",\"message\":\"Invalid or expired two-factor token\"}");
+                    callback(resp);
+                    return;
+                }
+                auto db = drogon::app().getDbClient();
+                services::TwoFactorAuthService tfaService(db);
+                auto secretOpt = tfaService.getUserSecret(*userIdOpt);
+                bool ok = secretOpt.has_value() && tfaService.verifyCode(*secretOpt, code);
+                if (!ok)
+                {
+                    // 400, а не 401: чтобы фронт не перезагружал страницу при ошибочном коде
+                    auto resp = drogon::HttpResponse::newHttpResponse();
+                    resp->setStatusCode(drogon::k400BadRequest);
+                    resp->setBody("{\"status\":\"error\",\"message\":\"Invalid code\"}");
+                    callback(resp);
+                    return;
+                }
+                auto user = authService_->getUserById(*userIdOpt);
+                if (!user)
+                {
+                    auto resp = drogon::HttpResponse::newHttpResponse();
+                    resp->setStatusCode(drogon::k401Unauthorized);
+                    resp->setBody("{\"status\":\"error\",\"message\":\"User not found\"}");
+                    callback(resp);
+                    return;
+                }
+                auto token = authService_->generateToken(*user);
+                nlohmann::json result;
+                result["status"] = "success";
+                result["token"] = token;
+                result["user"] = user->toJson();
+                auto resp = drogon::HttpResponse::newHttpResponse();
+                resp->setStatusCode(drogon::k200OK);
+                resp->setContentTypeString("application/json");
+                resp->setBody(result.dump());
+                callback(resp);
+            }
+            catch (const std::exception &e)
+            {
+                LOG_ERROR << "2FA login error: " << e.what();
                 auto resp = drogon::HttpResponse::newHttpResponse();
                 resp->setStatusCode(drogon::k500InternalServerError);
                 resp->setBody("{\"status\":\"error\",\"message\":\"Internal server error\"}");

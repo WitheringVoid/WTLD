@@ -41,6 +41,10 @@ namespace wtld
                     return;
                 }
 
+                // Удаляем старую отключённую запись, чтобы 2FA можно было настроить заново
+                dbClient_->execSqlSync(
+                    "DELETE FROM two_factor_auth WHERE user_id = $1 AND is_enabled = false", userId);
+
                 // Генерация секрета
                 std::string secret = twoFAService_->generateSecret();
 
