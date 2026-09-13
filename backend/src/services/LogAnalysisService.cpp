@@ -4,6 +4,31 @@
 #include <algorithm>
 #include <numeric>
 
+namespace
+{
+    std::string toPgTextArray(const std::vector<std::string> &v)
+    {
+        std::string out = "{";
+        for (size_t i = 0; i < v.size(); ++i)
+        {
+            if (i)
+                out += ",";
+            std::string esc;
+            for (char c : v[i])
+            {
+                if (c == '"' || c == '\\')
+                    esc += '\\';
+                esc += c;
+            }
+            out += '"';
+            out += esc;
+            out += '"';
+        }
+        out += "}";
+        return out;
+    }
+} // namespace
+
 namespace wtld
 {
     namespace services
@@ -216,15 +241,19 @@ namespace wtld
         {
             try
             {
-                nlohmann::json patternsJson = result.detectedPatterns;
                 dbClient_->execSqlSync(
                     "INSERT INTO log_analytics (log_file_id, user_id, analysis_type, severity_level, "
                     "title, description, data, detected_patterns, is_anomaly) "
                     "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-                    logFileId, userId, result.type, result.severity,
-                    result.title, result.description, result.data.dump(),
-                    patternsJson.dump(), result.isAnomaly);
-
+                    logFileId,
+                    userId,
+                    result.type,
+                    result.severity,
+                    result.title,
+                    result.description,
+                    result.data.dump(),
+                    toPgTextArray(result.detectedPatterns),
+                    result.isAnomaly);
                 return true;
             }
             catch (const std::exception &e)

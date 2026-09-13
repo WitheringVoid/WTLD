@@ -24,7 +24,7 @@ namespace wtld
             try
             {
                 int userId = utils::getUserIdFromRequest(req, dbClient_);
-                if (userId < 0)
+                if (userId <= 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k401Unauthorized);
@@ -56,7 +56,7 @@ namespace wtld
                 const auto &file = files[0];
                 std::string content(file.fileContent().data(), file.fileContent().size());
                 std::string filename = file.getFileName();
-                long fileSize = static_cast<long>(content.size());
+                int64_t fileSize = static_cast<int64_t>(content.size());
 
                 std::string fileType = "txt";
                 if (filename.size() > 5 && filename.substr(filename.size() - 5) == ".json")
@@ -114,7 +114,7 @@ namespace wtld
             try
             {
                 int userId = utils::getUserIdFromRequest(req, dbClient_);
-                if (userId < 0)
+                if (userId <= 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k401Unauthorized);
@@ -125,12 +125,12 @@ namespace wtld
 
                 std::string status = req->getParameter("status");
                 std::string fileType = req->getParameter("fileType");
-                int limit = 20;
+                int64_t limit = 20;
                 try
                 {
                     auto limitStr = req->getParameter("limit");
                     if (!limitStr.empty())
-                        limit = std::stoi(limitStr);
+                        limit = static_cast<int64_t>(std::stoll(limitStr));
                 }
                 catch (...)
                 {
@@ -181,25 +181,25 @@ namespace wtld
         }
 
         void LogController::getLogById(const drogon::HttpRequestPtr &req,
-                                       std::function<void(const drogon::HttpResponsePtr &)> &&callback)
+                                       std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                       const std::string &logId)
         {
             try
             {
                 int userId = utils::getUserIdFromRequest(req, dbClient_);
-                if (userId < 0)
+                if (userId <= 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k401Unauthorized);
-                    resp->setBody("{\"status\":\"error\",\"message\":\"Unauthorized\"}");
+                    resp->setBody("{\"status\":\"error\",\"message\":\"Invalid log id\"}");
                     callback(resp);
                     return;
                 }
 
-                auto id = req->getParameter("id");
                 auto result = dbClient_->execSqlSync(
                     "SELECT id, filename, file_type, file_size, upload_date, status, parsed_content "
                     "FROM logs WHERE id = $1 AND user_id = $2",
-                    id, userId);
+                    logId, userId);
 
                 if (result.empty())
                 {
@@ -245,12 +245,13 @@ namespace wtld
         }
 
         void LogController::deleteLog(const drogon::HttpRequestPtr &req,
-                                      std::function<void(const drogon::HttpResponsePtr &)> &&callback)
+                                      std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                      const std::string &logId)
         {
             try
             {
                 int userId = utils::getUserIdFromRequest(req, dbClient_);
-                if (userId < 0)
+                if (userId <= 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k401Unauthorized);
@@ -259,8 +260,7 @@ namespace wtld
                     return;
                 }
 
-                auto id = req->getParameter("id");
-                dbClient_->execSqlSync("DELETE FROM logs WHERE id = $1 AND user_id = $2", id, userId);
+                dbClient_->execSqlSync("DELETE FROM logs WHERE id = $1 AND user_id = $2", logId, userId);
 
                 nlohmann::json response;
                 response["status"] = "success";
@@ -282,12 +282,13 @@ namespace wtld
         }
 
         void LogController::getLogStats(const drogon::HttpRequestPtr &req,
-                                        std::function<void(const drogon::HttpResponsePtr &)> &&callback)
+                                        std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                        const std::string &logId)
         {
             try
             {
                 int userId = utils::getUserIdFromRequest(req, dbClient_);
-                if (userId < 0)
+                if (userId <= 0)
                 {
                     auto resp = drogon::HttpResponse::newHttpResponse();
                     resp->setStatusCode(drogon::k401Unauthorized);
@@ -296,10 +297,9 @@ namespace wtld
                     return;
                 }
 
-                auto id = req->getParameter("id");
                 auto logResult = dbClient_->execSqlSync(
                     "SELECT parsed_content FROM logs WHERE id = $1 AND user_id = $2",
-                    id, userId);
+                    logId, userId);
 
                 if (logResult.empty())
                 {
@@ -332,7 +332,7 @@ namespace wtld
                 auto analyticsResult = dbClient_->execSqlSync(
                     "SELECT analysis_type, severity_level, title, is_anomaly, created_at "
                     "FROM log_analytics WHERE log_file_id = $1 AND user_id = $2",
-                    id, userId);
+                    logId, userId);
 
                 nlohmann::json analytics = nlohmann::json::array();
                 for (const auto &row : analyticsResult)

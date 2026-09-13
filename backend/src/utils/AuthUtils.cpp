@@ -10,14 +10,27 @@ namespace wtld
         int getUserIdFromRequest(const drogon::HttpRequestPtr &req,
                                  const drogon::orm::DbClientPtr &dbClient)
         {
-            // Сначала пробуем из атрибутов (если JwtMiddleware уже установил)
             try
             {
-                return req->attributes()->get<int>("userId");
+                std::string auth = req->getHeader("Authorization");
+                if (auth.empty())
+                    auth = req->getHeader("authorization");
+
+                const std::string prefix = "Bearer ";
+                if (auth.rfind(prefix, 0) == 0)
+                    auth = auth.substr(prefix.size());
+                if (auth.empty())
+                    return -1;
+
+                services::AuthService authService(dbClient);
+                auto user = authService.validateToken(auth);
+                if (!user)
+                    return -1;
+                return user->id;
             }
             catch (...)
             {
-                // Не найден — извлекаем из токена
+                return -1;
             }
 
             auto authHeader = req->getHeader("Authorization");

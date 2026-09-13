@@ -74,7 +74,7 @@ export const logsApi = {
 
 export const analyticsApi = {
   getDashboard: () =>
-    api.get<DashboardData>('/analytics/dashboard'),
+    api.get<{ status: string; data: DashboardData }>('/analytics/dashboard'),
 
   getAnalytics: (logId: number) =>
     api.get<{ status: string; data: AnalysisResult[] }>(`/analytics/${logId}`),

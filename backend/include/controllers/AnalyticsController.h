@@ -27,10 +27,12 @@ namespace wtld
                               std::function<void(const drogon::HttpResponsePtr &)> &&callback);
 
             void getAnalytics(const drogon::HttpRequestPtr &req,
-                              std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+                              std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                              const std::string &logId);
 
             void getAnomalies(const drogon::HttpRequestPtr &req,
-                              std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+                              std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                              const std::string &logId);
 
             void getRules(const drogon::HttpRequestPtr &req,
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback);
@@ -39,7 +41,8 @@ namespace wtld
                             std::function<void(const drogon::HttpResponsePtr &)> &&callback);
 
             void deleteRule(const drogon::HttpRequestPtr &req,
-                            std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+                            std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                            const std::string &id);
 
         private:
             std::shared_ptr<services::LogAnalysisService> logAnalysisService_;

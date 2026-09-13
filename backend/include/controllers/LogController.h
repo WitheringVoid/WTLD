@@ -31,13 +31,16 @@ namespace wtld
                          std::function<void(const drogon::HttpResponsePtr &)> &&callback);
 
             void getLogById(const drogon::HttpRequestPtr &req,
-                            std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+                            std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                            const std::string &id);
 
             void deleteLog(const drogon::HttpRequestPtr &req,
-                           std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+                           std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                           const std::string &id);
 
             void getLogStats(const drogon::HttpRequestPtr &req,
-                             std::function<void(const drogon::HttpResponsePtr &)> &&callback);
+                             std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                             const std::string &id);
 
         private:
             std::shared_ptr<services::LogParserService> logParserService_;

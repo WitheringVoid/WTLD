@@ -4,7 +4,7 @@ import type { DashboardData } from '@/types/api';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState<{ status: string; data: DashboardData } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,25 +38,25 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Всего логов"
-          value={data?.statistics?.total_logs ?? 0}
+          value={data?.data?.statistics?.total_logs ?? 0}
           icon="📁"
           color="primary"
         />
         <StatCard
           title="Обработано"
-          value={data?.statistics?.completed_logs ?? 0}
+          value={data?.data?.statistics?.completed_logs ?? 0}
           icon="✅"
           color="green"
         />
         <StatCard
           title="Аномалии"
-          value={data?.statistics?.total_anomalies ?? 0}
+          value={data?.data?.statistics?.total_anomalies ?? 0}
           icon="⚠️"
           color="red"
         />
         <StatCard
           title="Правила"
-          value={data?.statistics?.active_rules ?? 0}
+          value={data?.data?.statistics?.active_rules ?? 0}
           icon="📋"
           color="blue"
         />
@@ -69,22 +69,22 @@ export default function Dashboard() {
           <div className="space-y-4">
             <SeverityBar
               label="Критический"
-              count={data?.severity_distribution?.critical ?? 0}
+              count={data?.data?.severity_distribution?.critical ?? 0}
               color="bg-red-500"
             />
             <SeverityBar
               label="Высокий"
-              count={data?.severity_distribution?.high ?? 0}
+              count={data?.data?.severity_distribution?.high ?? 0}
               color="bg-orange-500"
             />
             <SeverityBar
               label="Средний"
-              count={data?.severity_distribution?.medium ?? 0}
+              count={data?.data?.severity_distribution?.medium ?? 0}
               color="bg-yellow-500"
             />
             <SeverityBar
               label="Низкий"
-              count={data?.severity_distribution?.low ?? 0}
+              count={data?.data?.severity_distribution?.low ?? 0}
               color="bg-green-500"
             />
           </div>
@@ -94,8 +94,8 @@ export default function Dashboard() {
         <div className="bg-dark-800 rounded-lg p-6 border border-dark-700">
           <h2 className="text-lg font-semibold text-white mb-4">Последние аномалии</h2>
           <div className="space-y-3">
-            {data?.recent_anomalies?.length ? (
-              data.recent_anomalies.slice(0, 5).map((anomaly) => (
+            {data?.data?.recent_anomalies?.length ? (
+              data.data.recent_anomalies.slice(0, 5).map((anomaly) => (
                 <div
                   key={anomaly.id}
                   className="p-3 bg-dark-900 rounded-lg border border-dark-700"

@@ -106,7 +106,8 @@ namespace wtld
         }
 
         void AnalyticsController::getAnalytics(const drogon::HttpRequestPtr &req,
-                                               std::function<void(const drogon::HttpResponsePtr &)> &&callback)
+                                               std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                               const std::string &logId)
         {
             try
             {
@@ -119,8 +120,6 @@ namespace wtld
                     callback(resp);
                     return;
                 }
-
-                auto logId = req->getParameter("logId");
 
                 auto result = dbClient_->execSqlSync(
                     "SELECT id, analysis_type, severity_level, title, description, data, detected_patterns, is_anomaly, created_at "
@@ -163,7 +162,8 @@ namespace wtld
         }
 
         void AnalyticsController::getAnomalies(const drogon::HttpRequestPtr &req,
-                                               std::function<void(const drogon::HttpResponsePtr &)> &&callback)
+                                               std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                               const std::string &logId)
         {
             try
             {
@@ -176,8 +176,6 @@ namespace wtld
                     callback(resp);
                     return;
                 }
-
-                auto logId = req->getParameter("logId");
 
                 auto result = dbClient_->execSqlSync(
                     "SELECT id, analysis_type, severity_level, title, description, data, created_at "
@@ -338,7 +336,8 @@ namespace wtld
         }
 
         void AnalyticsController::deleteRule(const drogon::HttpRequestPtr &req,
-                                             std::function<void(const drogon::HttpResponsePtr &)> &&callback)
+                                             std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                             const std::string &id)
         {
             try
             {
@@ -351,8 +350,6 @@ namespace wtld
                     callback(resp);
                     return;
                 }
-
-                auto id = req->getParameter("id");
 
                 // Проверка что правило принадлежит пользователю
                 auto checkResult = dbClient_->execSqlSync(
